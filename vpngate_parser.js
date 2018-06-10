@@ -93,7 +93,7 @@ var executeList = function(list) {
                     if (item.tunnel == null) {
                         l(c.red.bgBlack('Rejecting VPN Server ') + c.yellow.bgBlack(item.hostname));
                         l(c.red('Terminating ' + item.hostname + ' pid ' + c.black.bgWhite(vpnProcess.pid)));
-                        return child.execSync('sudo kill ' + vpnProcess.pid);
+                        child.execSync('sudo kill ' + vpnProcess.pid);
                     } else
                         try {
                             var o = child.execSync('ifconfig ' + item.tunnel).toString().split(' ').join(' ');
