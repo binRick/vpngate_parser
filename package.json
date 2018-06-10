@@ -18,7 +18,22 @@
   },
   "homepage": "https://github.com/rnd49/vpngate_parser#readme",
   "dependencies": {
+    "async": "^2.6.1",
+    "cacheman-file": "^0.2.1",
+    "chalk": "^2.4.1",
+    "ifconfig": "0.0.1",
+    "ifconfig-linux": "^0.1.0",
+    "ifconfig-parser": "0.0.1",
+    "md5": "^2.2.1",
     "neat-csv": "^2.1.0",
-    "node-fetch": "^1.7.1"
+    "node-fetch": "^1.7.1",
+    "openvpn-config-splitter": "^1.0.0",
+    "ora": "^2.1.0",
+    "prettyjson": "^1.2.1",
+    "request": "^2.87.0",
+    "sanitize-filename": "^1.6.1",
+    "twig": "^1.11.1",
+    "underscore": "^1.9.1",
+    "wireless-tools": "^0.19.0"
   }
 }
