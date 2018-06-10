@@ -1,51 +1,154 @@
-const fs = require('fs');
-const fetch = require('node-fetch');
-const neatCsv = require('neat-csv');
-// csv structure
+#!/usr/bin/env node
+
+var fs = require('fs'),
+    ifconfig = require('wireless-tools/ifconfig'),
+    url = 'http://www.vpngate.net/api/iphone/',
+    cacheSeconds = 60 * 30,
+    vpnConcurrency = 15,
+    vpnTimeLimit = 5000,
+    templateFile = __dirname + '/configTemplate.twig',
+    splitter = require('openvpn-config-splitter'),
+    openvpn = '/usr/sbin/openvpn',
+    sanitize = require('sanitize-filename')
+pj = require('prettyjson'),
+    twig = require('twig'),
+    md5 = require('md5'),
+    c = require('chalk'),
+    ora = require('ora'),
+    fetch = require('node-fetch'),
+    l = console.log,
+    child = require('child_process'),
+    CachemanFile = require('cacheman-file'),
+    Path = require('path'),
+    cache = new CachemanFile({
+        tmpDir: Path.join(process.cwd(), 'temp')
+    }, {}),
+    async = require('async'),
+    _ = require('underscore'),
+    neatCsv = require('neat-csv');
+
+// CSV Columns
 // '#HostName','IP','Score','Ping','Speed','CountryLong','CountryShort','NumVpnSessions',
-// 'Uptime','TotalUsers','TotalTraffic','LogType','Operator','Message','OpenVPN_ConfigData_Base64'
-const serverFilter = (arr) => {
-  return arr.filter(des => des.CountryShort === 'RU' /* timed hardcode of selection*/);
-};
+//     'Uptime','TotalUsers','TotalTraffic','LogType','Operator','Message','OpenVPN_ConfigData_Base64'
 
-
-const purifyObj = (obj) => {
-  const unwKeys = ['Uptime', 'TotalUsers', 'TotalTrafficLogType', 'Operator', 'Message', 'LogType'];
-  return obj;
-};
 const countryList = (obj) => {
-  const countries = [];
-  for (const i in obj) {
-    countries.push(obj[i].CountryShort);
-  }
-  function unique(arr) {
-    const obj = {};
-    for (const i in countries) {
-      const str = arr[i];
-      obj[str] = true;
+    const countries = [];
+    for (const i in obj) {
+        countries.push(obj[i].CountryShort);
     }
-    return Object.keys(obj);
-  }
-  return unique(countries);
+
+    function unique(arr) {
+        const obj = {};
+        for (const i in countries) {
+            const str = arr[i];
+            obj[str] = true;
+        }
+        return Object.keys(obj);
+    }
+    return unique(countries);
 };
 
-const expConfigs = (obj) => {
-  for (const i in Object.keys(obj)) {
-    fs.writeFile(`${obj[i].CountryShort}_${obj[i]['#HostName']}.ovpn`, obj[i].OpenVPN_ConfigData_Base64, 'base64');
-    console.log(`${obj[i]['#HostName']} configuration written`);
-}
+var debugList = function(list) {
+    //    l(pj.render(list[0]));
+    console.log(`\nNum of servers: ${Object.keys(list).length}`);
+    console.log(`Server countries: ${countryList(list)}`);
 };
-fetch('http://www.vpngate.net/api/iphone/')
-  .then(res => res.text())
-  .then(res => res.split(/\r\n|\n|\r/).slice(1, -2).join('\n'))
-  .then(csv => neatCsv(csv))
-  .then((data) => { console.log(`Num of servers: ${Object.keys(data).length}`); return data; })
-  .then((data) => { console.log(`Server countries: ${countryList(data)}`); return data; })
-  .then(data => serverFilter(data))
-  .then((data) => { console.log(`Num of desired servers: ${Object.keys(data).length}`); return data; })
-  .then((data) => { console.log(`Desired server Countries: ${countryList(data)}`); return data; })
-  .then(data => purifyObj(data))
-  .then(data => expConfigs(data))
-  // .then(data => console.log(data))
-  .then(console.log('All done'))
-  .catch(error => console.log('Error!', error));
+var executeList = function(list) {
+    async.mapLimit(list, vpnConcurrency, function(item, _cb) {
+        l('Working on ' + c.yellow.bgBlack(item.hostname));
+        fs.writeFileSync(item.file, item.config);
+        item.stdout = '';
+        item.stderr = '';
+        var vpnProcess = child.spawn('sudo', [openvpn, item.file]);
+        vpnProcess.stdout.on('data', function(dat) {
+            dat = dat.toString();
+            item.stdout += dat;
+        });
+        vpnProcess.stderr.on('data', function(dat) {
+            dat = dat.toString();
+            item.stderr += dat;
+        });
+        vpnProcess.on('exit', function(code) {
+            clearInterval(killer);
+            item.code = code;
+            delete item.config;
+            l(c.green("\t" + c.yellow.bgBlack(item.hostname) + " Completed with code " + c.black.bgWhite(item.code)));
+            _cb(null, item);
+        });
+        var killer = setTimeout(function() {
+            var ifc = 'tun_' + item.hostname;
+            try {
+                var o = child.execSync('ifconfig ' + ifc).toString();
+                l(o);
+            } catch (e) {
+                try {
+                    l(c.red('Terminating ' + item.hostname + ' pid ' + c.black.bgWhite(vpnProcess.pid)));
+                    child.execSync('sudo kill ' + vpnProcess.pid);
+                } catch (e) {
+                    _cb(null, item);
+                }
+
+            }
+        }, vpnTimeLimit);
+    }, function(e, done) {
+        if (e) throw e;
+        l(c.green.bgBlack('Completed VPN List'));
+    });
+};
+
+var handleList = function(list) {
+    async.map(list, function(item, _cb) {
+        item.config = Buffer.from(item.OpenVPN_ConfigData_Base64, 'base64').toString();
+        delete item.OpenVPN_ConfigData_Base64;
+        splitter.split(item.config, {}, function(err, parts, missing) {
+            if (err) throw err;
+            item.caCert = parts.caCert;
+            item.userCert = parts.userCert;
+            item.privateKey = parts.privateKey;
+            _.each(item.config.split("\n"), function(li) {
+                if (li.match(/^proto/)) {
+                    var li1 = li.split(' ');
+                    item.proto = li1[1];
+                }
+                if (li.match(/^remote/)) {
+                    var li2 = li.split(' ');
+                    item.ip = li2[1];
+                    item.port = li2[2];
+                }
+            });
+            delete item.config;
+            item.hostname = item['#HostName'];
+            item.file = __dirname + '/config/' + item.hostname + '.ovpn';
+            twig.renderFile(templateFile, item, function(e, config) {
+                if (e) throw e;
+                item.config = config;
+                _cb(null, item);
+            });
+        });
+    }, function(e, newList) {
+        if (e) throw e;
+        debugList(newList);
+        executeList(newList);
+    });
+};
+cache.get(md5(url), function(err, value) {
+    if (err) throw err;
+    if (value == null) {
+        var m = 'Fetching VPN List from internet',
+            spinner = new ora(m).start();
+        fetch(url)
+            .then(res => res.text())
+            .then(res => res.split(/\r\n|\n|\r/).slice(1, -2).join('\n'))
+            .then(csv => neatCsv(csv))
+            .then(function(data) {
+                spinner.succeed('Remote Resource Fetched');
+                cache.set(md5(url), data, cacheSeconds, function(err, value) {
+                    if (err) throw err;
+                    handleList(data);
+                });
+            })
+            .catch(error => console.log('Error!', error));
+    } else {
+        handleList(value);
+    }
+});
