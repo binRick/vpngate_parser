@@ -137,7 +137,7 @@ var executeList = function(list) {
             });
             l(c.black.bgWhite(acceptedVpns.length) + c.white.bgBlack(' / ') + c.black.bgWhite(done.length) + ' ' + c.green.bgBlack(' VPN Servers are reachable'));
 
-		l(acceptedVpns);
+		l(acceptedVpns[0]);
         });
 };
 
