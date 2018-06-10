@@ -23,6 +23,9 @@ var fs = require('fs'),
     _ = require('underscore'),
     neatCsv = require('neat-csv');
 
+if (!fs.existsSync(dir)){
+    fs.mkdirSync(dir);
+
 // CSV Columns
 // '#HostName','IP','Score','Ping','Speed','CountryLong','CountryShort','NumVpnSessions',
 //     'Uptime','TotalUsers','TotalTraffic','LogType','Operator','Message','OpenVPN_ConfigData_Base64'
@@ -114,7 +117,7 @@ var handleList = function(list) {
             });
             delete item.config;
             item.hostname = item['#HostName'];
-            item.file = __dirname + '/config/' + item.hostname + '.ovpn';
+            item.file = config.vpnConfigFileDirectory+'/' + item.hostname + '.ovpn';
             twig.renderFile(templateFile, item, function(e, configFile) {
                 if (e) throw e;
                 item.config = configFile;
