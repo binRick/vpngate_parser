@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 var fs = require('fs'),
+    _ = require('underscore'),
     ifconfig = require('wireless-tools/ifconfig'),
     config = require('./config'),
     templateFile = __dirname + '/configTemplate.twig',
@@ -49,8 +50,7 @@ const countryList = (obj) => {
 
 var debugList = function(list) {
     //    l(pj.render(list[0]));
-    console.log(`\nNum of servers: ${Object.keys(list).length}`);
-    console.log(`Server countries: ${countryList(list)}`);
+    console.log('\nParsed ' + c.yellow.bgBlack(Object.keys(list).length) + ' VPN Servers in ' + c.yellow.bgBlack(countryList(list).length) + ' Different Countries: ' + c.yellow.bgBlack(countryList(list)) + '\n');
 };
 var executeList = function(list) {
     async.mapLimit(list, config.vpnConcurrency, function(item, _cb) {
@@ -58,10 +58,24 @@ var executeList = function(list) {
         fs.writeFileSync(item.file, item.config);
         item.stdout = '';
         item.stderr = '';
+        item.tunnel = null;
+        item.localAddr = null;
+        item.remoteAddr = null;
+        item.netmask = null;
         var vpnProcess = child.spawn('sudo', [config.openvpn, item.file]);
         vpnProcess.stdout.on('data', function(dat) {
             dat = dat.toString();
             item.stdout += dat;
+            _.each(item.stdout.split("\n"), function(lin) {
+                lin = lin.split(" ").join(" ");
+                if (lin.includes('ifconfig') && lin.includes('netmask 255.255.255.255 up')) {
+                    item.tunnel = lin.split("ifconfig")[1].split(' ').join(' ').split(' ')[1].split(' ')[0];
+                }
+            });
+            if (item.stdout.includes('Initialization Sequence Completed')) {
+
+                l(c.yellow.bgBlack(item.hostname) + ' : ' + c.green.bgBlack('Tunnel Ready on interface ') + c.yellow.bgBlack(item.tunnel));
+            }
         });
         vpnProcess.stderr.on('data', function(dat) {
             dat = dat.toString();
@@ -72,26 +86,46 @@ var executeList = function(list) {
             item.code = code;
             delete item.config;
             l(c.green("\t" + c.yellow.bgBlack(item.hostname) + " Completed with code " + c.black.bgWhite(item.code)));
-            _cb(null, item);
+            return _cb(null, item);
         });
         var killer = setTimeout(function() {
-            var ifc = 'tun_' + item.hostname;
+            if (item.tunnel == null) {
+                l(c.red.bgBlack('Rejecting VPN Server ') + c.yellow.bgBlack(item.hostname));
+                l(c.red('Terminating ' + item.hostname + ' pid ' + c.black.bgWhite(vpnProcess.pid)));
+                return child.execSync('sudo kill ' + vpnProcess.pid);
+                //return _cb(null, item);
+            }
+
+            var ifc = item.tunnel;
             try {
-                var o = child.execSync('ifconfig ' + ifc).toString();
-                l(o);
-            } catch (e) {
+                var o = child.execSync('ifconfig ' + ifc).toString().split(' ').join(' ');
+                _.each(o.split("\n"), function(lin) {
+                    if (lin.includes("inet ")) {
+                        lin = lin.split(' ').join(' ').split('inet ')[1].split(' ');
+                        item.localAddr = lin[0];
+                        item.remoteAddr = lin[2];
+                        item.netmask = lin[4];
+                    }
+                });
                 try {
                     l(c.red('Terminating ' + item.hostname + ' pid ' + c.black.bgWhite(vpnProcess.pid)));
                     child.execSync('sudo kill ' + vpnProcess.pid);
+                    //return _cb(null, item);
                 } catch (e) {
-                    _cb(null, item);
+                    l(c.red.bgBlack('Failed to Terminate VPN on ' + c.yellow.bgBlack(item.hostname)))
+                    //return _cb(null, item);
                 }
-
+            } catch (e) {
+                l(c.red.bgBlack('Failed to establish VPN with ' + c.yellow.bgBlack(item.hostname)))
+                //return _cb(null, item);
             }
         }, config.vpnTimeLimit);
     }, function(e, done) {
         if (e) throw e;
-        l(c.green.bgBlack('Completed VPN List'));
+        var acceptedVpns = done.filter(function(item) {
+            return (item.localAddr != null && item.remoteAddr != null && item.netmask != null && item.tunnel != null);
+        });
+        l(c.black.bgWhite(acceptedVpns.length) + c.green.bgBlack(' VPN Servers are reachable'));
     });
 };
 
@@ -126,6 +160,7 @@ var handleList = function(list) {
         });
     }, function(e, newList) {
         if (e) throw e;
+        newList = newList.slice(0, config.maxVPNs);
         debugList(newList);
         executeList(newList);
     });
