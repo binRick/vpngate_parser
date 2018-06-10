@@ -102,13 +102,11 @@ var executeList = function(list) {
                                     lin = lin.split(' ').join(' ').split('inet ')[1].split(' ');
                                     if (lin[2] == 'netmask') {
                                         //centos
-                                        l('centos', lin)
                                         item.localAddr = lin[0];
                                         item.remoteAddr = lin[6];
                                         item.netmask = lin[3];
                                     } else if (lin[1] == '-->') {
                                         //osx
-                                        l('osx', lin)
                                         item.localAddr = lin[0];
                                         item.remoteAddr = lin[2];
                                         item.netmask = lin[4];
