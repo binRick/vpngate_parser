@@ -1,7 +1,7 @@
 module.exports = {
-    url: 'http://www.vpngate.net/api/iphone/',
-    cacheSeconds: 60 * 30,
-    vpnConcurrency: 15,
-    vpnTimeLimit: 5000,
-    openvpn: '/usr/sbin/openvpn',
+    url: process.VPNLISTURL || 'http://www.vpngate.net/api/iphone/',
+    cacheSeconds: process.CACHESECONDS || 60 * 30,
+    vpnConcurrency: process.VPNCONCURRENCY || 15,
+    vpnTimeLimit: process.VPNTIMELIMIT || 5000,
+    openvpn: process.OPENVPN || '/usr/sbin/openvpn',
 };
