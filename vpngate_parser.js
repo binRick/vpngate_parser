@@ -92,7 +92,7 @@ var executeList = function(list) {
             var killer = setTimeout(function() {
                     if (item.tunnel == null) {
                         l(c.red.bgBlack('Rejecting VPN Server ') + c.yellow.bgBlack(item.hostname));
-                        l(c.red('Terminating ' + item.hostname + ' pid ' + c.black.bgWhite(vpnProcess.pid)));
+                        l(c.red('* Terminating ' + item.hostname + ' pid ' + c.black.bgWhite(vpnProcess.pid)));
                         child.execSync('sudo kill ' + vpnProcess.pid);
                     } else
                         try {
@@ -118,7 +118,7 @@ var executeList = function(list) {
                                 }
                             });
                             try {
-                                l(c.red('Terminating ' + item.hostname + ' pid ' + c.black.bgWhite(vpnProcess.pid)));
+                                l(c.red('** Terminating ' + item.hostname + ' pid ' + c.black.bgWhite(vpnProcess.pid)));
                                 child.execSync('sudo kill ' + vpnProcess.pid);
                             } catch (e) {
                                 l(c.red.bgBlack('Failed to Terminate VPN on ' + c.yellow.bgBlack(item.hostname)))
