@@ -1,0 +1,31 @@
+ curl -4v ifconfig.io
+
+  ip route add 0.0.0.0/0 dev tun_russia table 1
+  ip rule add from all fwmark 1 table 1
+
+  ip route add 0.0.0.0/0 dev tun_indonesia table 2
+  ip rule add from all fwmark 2 table 2
+
+
+iptables -A OUTPUT -o eth0 -t mangle -p tcp --dport 44911 -j MARK --set-mark 1
+iptables -t nat -A OUTPUT -o eth0 -p tcp --dport 44911 -j DNAT --to :80
+
+iptables -A OUTPUT -o eth0 -t mangle -p tcp --dport 44912 -j MARK --set-mark 2
+iptables -t nat -A OUTPUT -o eth0 -p tcp --dport 44912 -j DNAT --to :80
+
+#  iptables -A OUTPUT -t mangle -p tcp --dport 80 -j MARK --set-mark 1
+#  iptables -A OUTPUT -t mangle -p tcp --dport 443 -j MARK --set-mark 1
+  iptables -t nat -A POSTROUTING -o tun_russia -j MASQUERADE
+iptables -t nat -A POSTROUTING -o tun_indonesia -j MASQUERADE
+
+
+ip rule
+ip route get 8.8.8.8 mark 0x1
+
+ip rule | grep ' lookup ' | grep "lookup [0-9]"| cut -d' ' -f6 | sort | uniq
+
+
+ip route flush cache
+
+
+ curl -4v ifconfig.io
