@@ -99,7 +99,6 @@ var executeList = function(list) {
                             var o = child.execSync('ifconfig ' + item.tunnel).toString().split(' ').join(' ');
                             _.each(o.split("\n"), function(lin) {
                                 if (lin.includes("inet ")) {
-                                    l('lin1:', lin);
                                     lin = lin.split(' ').join(' ').split('inet ')[1].split(' ');
                                     if (lin[2] == 'netmask') {
                                         //centos
@@ -113,8 +112,11 @@ var executeList = function(list) {
                                         item.localAddr = lin[0];
                                         item.remoteAddr = lin[2];
                                         item.netmask = lin[4];
-                                    }
-                                    l('lin2:', lin);
+                                    }else{
+				    	l(c.red.bgBlack('Unknown ifconfig output!'));
+					    l(lin);
+					    process.exit(-1);
+				    }
                                 }
                             });
                             try {
