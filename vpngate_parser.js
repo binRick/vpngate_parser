@@ -93,7 +93,7 @@ var executeList = function(list) {
                     if (item.tunnel == null) {
                         l(c.red.bgBlack('Rejecting VPN Server ') + c.yellow.bgBlack(item.hostname));
                         l(c.red('* Terminating ' + item.hostname + ' pid ' + c.black.bgWhite(vpnProcess.pid)));
-                        child.execSync('sudo kill ' + vpnProcess.pid);
+                        child.execSync('sleep 5 && sudo kill ' + vpnProcess.pid);
                     } else
                         try {
                             var o = child.execSync('ifconfig ' + item.tunnel).toString().split(' ').join(' ');
@@ -119,7 +119,7 @@ var executeList = function(list) {
                             });
                             try {
                                 l(c.red('** Terminating ' + item.hostname + ' pid ' + c.black.bgWhite(vpnProcess.pid)));
-                                child.execSync('sudo kill ' + vpnProcess.pid);
+                                child.execSync('sleep 5 && sudo kill ' + vpnProcess.pid);
                             } catch (e) {
                                 l(c.red.bgBlack('Failed to Terminate VPN on ' + c.yellow.bgBlack(item.hostname)))
                                 return _cb(null, item);
@@ -135,9 +135,9 @@ var executeList = function(list) {
             var acceptedVpns = done.filter(function(item) {
                 return (item.localAddr != null && item.remoteAddr != null && item.netmask != null && item.tunnel != null);
             });
+		l(acceptedVpns[0]);
             l(c.black.bgWhite(acceptedVpns.length) + c.white.bgBlack(' / ') + c.black.bgWhite(done.length) + ' ' + c.green.bgBlack(' VPN Servers are reachable'));
 
-		l(acceptedVpns[0]);
         });
 };
 
