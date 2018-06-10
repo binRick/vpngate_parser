@@ -54,7 +54,7 @@ var debugList = function(list) {
 };
 var executeList = function(list) {
     async.mapLimit(list, config.vpnConcurrency, function(item, _cb) {
-        l('Working on ' + c.yellow.bgBlack(item.hostname));
+        l('Working on ' + c.yellow.bgBlack(item.hostname) + ' using a OpenVPN Client config of ' + c.yellow.bgBlack(item.file.length) + ' bytes');
         fs.writeFileSync(item.file, item.config);
         item.stdout = '';
         item.stderr = '';
@@ -117,7 +117,7 @@ var handleList = function(list) {
             });
             delete item.config;
             item.hostname = item['#HostName'];
-            item.file = config.vpnConfigFileDirectory+'/' + item.hostname + '.ovpn';
+            item.file = config.vpnConfigFileDirectory + '/' + item.hostname + '.ovpn';
             twig.renderFile(templateFile, item, function(e, configFile) {
                 if (e) throw e;
                 item.config = configFile;
