@@ -54,77 +54,89 @@ var debugList = function(list) {
 };
 var executeList = function(list) {
     async.mapLimit(list, config.vpnConcurrency, function(item, _cb) {
-        l('Working on ' + c.yellow.bgBlack(item.hostname) + ' using a OpenVPN Client config of ' + c.yellow.bgBlack(item.file.length) + ' bytes');
-        fs.writeFileSync(item.file, item.config);
-        item.stdout = '';
-        item.stderr = '';
-        item.tunnel = null;
-        item.localAddr = null;
-        item.remoteAddr = null;
-        item.netmask = null;
-        var vpnProcess = child.spawn('sudo', [config.openvpn, item.file]);
-        vpnProcess.stdout.on('data', function(dat) {
-            dat = dat.toString();
-            item.stdout += dat;
-            _.each(item.stdout.split("\n"), function(lin) {
-                lin = lin.split(" ").join(" ");
-                if (lin.includes('ifconfig') && lin.includes('netmask 255.255.255.255 up')) {
-                    item.tunnel = lin.split("ifconfig")[1].split(' ').join(' ').split(' ')[1].split(' ')[0];
-                } else if (lin.includes('ip addr add dev')) {
-                    item.tunnel = lin.split('ip ')[1].split(' ')[3];
-                }
-            });
-            if (item.stdout.includes('Initialization Sequence Completed')) {
-                l(c.yellow.bgBlack(item.hostname) + ' : ' + c.green.bgBlack('Tunnel Ready on interface ') + c.yellow.bgBlack(item.tunnel));
-            }
-        });
-        vpnProcess.stderr.on('data', function(dat) {
-            dat = dat.toString();
-            item.stderr += dat;
-        });
-        vpnProcess.on('exit', function(code) {
-            clearInterval(killer);
-            item.code = code;
-            delete item.config;
-            l(c.green("\t" + c.yellow.bgBlack(item.hostname) + " Completed with code " + c.black.bgWhite(item.code)));
-            return _cb(null, item);
-        });
-        var killer = setTimeout(function() {
-            if (item.tunnel == null) {
-                l(c.red.bgBlack('Rejecting VPN Server ') + c.yellow.bgBlack(item.hostname));
-                l(c.red('Terminating ' + item.hostname + ' pid ' + c.black.bgWhite(vpnProcess.pid)));
-                return child.execSync('sudo kill ' + vpnProcess.pid);
-            }else
-            try {
-                var o = child.execSync('ifconfig ' + item.tunnel).toString().split(' ').join(' ');
-                _.each(o.split("\n"), function(lin) {
-                    if (lin.includes("inet ")) {
-			    l('lin1:', lin);
-                        lin = lin.split(' ').join(' ').split('inet ')[1].split(' ');
-			    l('lin2:', lin);
-                        item.localAddr = lin[0];
-                        item.remoteAddr = lin[2];
-                        item.netmask = lin[4];
+            l('Working on ' + c.yellow.bgBlack(item.hostname) + ' using a OpenVPN Client config of ' + c.yellow.bgBlack(item.file.length) + ' bytes');
+            fs.writeFileSync(item.file, item.config);
+            item.stdout = '';
+            item.stderr = '';
+            item.tunnel = null;
+            item.localAddr = null;
+            item.remoteAddr = null;
+            item.netmask = null;
+            var vpnProcess = child.spawn('sudo', [config.openvpn, item.file]);
+            vpnProcess.stdout.on('data', function(dat) {
+                dat = dat.toString();
+                item.stdout += dat;
+                _.each(item.stdout.split("\n"), function(lin) {
+                    lin = lin.split(" ").join(" ");
+                    if (lin.includes('ifconfig') && lin.includes('netmask 255.255.255.255 up')) {
+                        item.tunnel = lin.split("ifconfig")[1].split(' ').join(' ').split(' ')[1].split(' ')[0];
+                    } else if (lin.includes('ip addr add dev')) {
+                        item.tunnel = lin.split('ip ')[1].split(' ')[3];
                     }
                 });
-                try {
-                    l(c.red('Terminating ' + item.hostname + ' pid ' + c.black.bgWhite(vpnProcess.pid)));
-                    child.execSync('sudo kill ' + vpnProcess.pid);
-                } catch (e) {
-                    l(c.red.bgBlack('Failed to Terminate VPN on ' + c.yellow.bgBlack(item.hostname)))
-                return _cb(null, item);
+                if (item.stdout.includes('Initialization Sequence Completed')) {
+                    l(c.yellow.bgBlack(item.hostname) + ' : ' + c.green.bgBlack('Tunnel Ready on interface ') + c.yellow.bgBlack(item.tunnel));
                 }
-            } catch (e) {
-                l(c.red.bgBlack('Failed to establish VPN with ' + c.yellow.bgBlack(item.hostname)))
-            }
-        }, config.vpnTimeLimit);
-    }, function(e, done) {
-        if (e) throw e;
-        var acceptedVpns = done.filter(function(item) {
-            return (item.localAddr != null && item.remoteAddr != null && item.netmask != null && item.tunnel != null);
+            });
+            vpnProcess.stderr.on('data', function(dat) {
+                dat = dat.toString();
+                item.stderr += dat;
+            });
+            vpnProcess.on('exit', function(code) {
+                clearInterval(killer);
+                item.code = code;
+                delete item.config;
+                l(c.green("\t" + c.yellow.bgBlack(item.hostname) + " Completed with code " + c.black.bgWhite(item.code)));
+                return _cb(null, item);
+            });
+            var killer = setTimeout(function() {
+                    if (item.tunnel == null) {
+                        l(c.red.bgBlack('Rejecting VPN Server ') + c.yellow.bgBlack(item.hostname));
+                        l(c.red('Terminating ' + item.hostname + ' pid ' + c.black.bgWhite(vpnProcess.pid)));
+                        return child.execSync('sudo kill ' + vpnProcess.pid);
+                    } else
+                        try {
+                            var o = child.execSync('ifconfig ' + item.tunnel).toString().split(' ').join(' ');
+                            _.each(o.split("\n"), function(lin) {
+                                if (lin.includes("inet ")) {
+                                    l('lin1:', lin);
+                                    lin = lin.split(' ').join(' ').split('inet ')[1].split(' ');
+                                    if (lin[2] == 'netmask') {
+                                        //centos
+                                        l('centos', lin)
+                                        item.localAddr = lin[0];
+                                        item.remoteAddr = lin[6];
+                                        item.netmask = lin[3];
+                                    } else if (lin[1] == '-->') {
+                                        //osx
+                                        l('osx', lin)
+                                        item.localAddr = lin[0];
+                                        item.remoteAddr = lin[2];
+                                        item.netmask = lin[4];
+                                    }
+                                    l('lin2:', lin);
+                                }
+                            });
+                            try {
+                                l(c.red('Terminating ' + item.hostname + ' pid ' + c.black.bgWhite(vpnProcess.pid)));
+                                child.execSync('sudo kill ' + vpnProcess.pid);
+                            } catch (e) {
+                                l(c.red.bgBlack('Failed to Terminate VPN on ' + c.yellow.bgBlack(item.hostname)))
+                                return _cb(null, item);
+                            }
+                        } catch (e) {
+                            l(c.red.bgBlack('Failed to establish VPN with ' + c.yellow.bgBlack(item.hostname)))
+                        }
+                },
+                config.vpnTimeLimit);
+        },
+        function(e, done) {
+            if (e) throw e;
+            var acceptedVpns = done.filter(function(item) {
+                return (item.localAddr != null && item.remoteAddr != null && item.netmask != null && item.tunnel != null);
+            });
+            l(c.black.bgWhite(acceptedVpns.length) + c.white.bgBlack(' / ') + c.black.bgWhite(done.length) + ' ' + c.green.bgBlack(' VPN Servers are reachable'));
         });
-        l(c.black.bgWhite(acceptedVpns.length) + c.white.bgBlack(' / ') + c.black.bgWhite(done.length) + ' ' + c.green.bgBlack(' VPN Servers are reachable'));
-    });
 };
 
 var handleList = function(list) {
