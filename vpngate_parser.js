@@ -70,7 +70,10 @@ var executeList = function(list) {
                 lin = lin.split(" ").join(" ");
                 if (lin.includes('ifconfig') && lin.includes('netmask 255.255.255.255 up')) {
                     item.tunnel = lin.split("ifconfig")[1].split(' ').join(' ').split(' ')[1].split(' ')[0];
-                }
+                }elseif(lin.includes('ip addr add dev')){
+			item.tunnel = lin.split('ip ')[1].split(' ')[3];
+			l(item.tunnel, 'TUNNEL');
+		}
             });
             if (item.stdout.includes('Initialization Sequence Completed')) {
 
@@ -125,7 +128,7 @@ var executeList = function(list) {
         var acceptedVpns = done.filter(function(item) {
             return (item.localAddr != null && item.remoteAddr != null && item.netmask != null && item.tunnel != null);
         });
-        l(c.black.bgWhite(acceptedVpns.length) + c.green.bgBlack(' VPN Servers are reachable'));
+        l(c.black.bgWhite(acceptedVpns.length) + c.white.bgBlack(' / ') + c.black.bgWhite(done.length) + ' ' + c.green.bgBlack(' VPN Servers are reachable'));
     });
 };
 
