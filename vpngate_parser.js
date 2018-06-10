@@ -157,7 +157,7 @@ var executeList = function(list) {
 				CountryLong: vpn.CountryLong,
 				NumVpnSessions: vpn.NumVpnSessions,
 			};
-			l(pj.render(lv));
+			l(pj.render(lv)+"\n");
 		});
 
         });
