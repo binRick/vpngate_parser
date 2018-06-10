@@ -4,3 +4,4 @@ package-lock.json
 *.ovpntemp/
 config/*
 temp
+.*.swp
