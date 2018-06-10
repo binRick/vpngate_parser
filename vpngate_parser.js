@@ -70,13 +70,11 @@ var executeList = function(list) {
                 lin = lin.split(" ").join(" ");
                 if (lin.includes('ifconfig') && lin.includes('netmask 255.255.255.255 up')) {
                     item.tunnel = lin.split("ifconfig")[1].split(' ').join(' ').split(' ')[1].split(' ')[0];
-                }else if(lin.includes('ip addr add dev')){
-			item.tunnel = lin.split('ip ')[1].split(' ')[3];
-			l(item.tunnel, 'TUNNEL');
-		}
+                } else if (lin.includes('ip addr add dev')) {
+                    item.tunnel = lin.split('ip ')[1].split(' ')[3];
+                }
             });
             if (item.stdout.includes('Initialization Sequence Completed')) {
-
                 l(c.yellow.bgBlack(item.hostname) + ' : ' + c.green.bgBlack('Tunnel Ready on interface ') + c.yellow.bgBlack(item.tunnel));
             }
         });
@@ -96,15 +94,14 @@ var executeList = function(list) {
                 l(c.red.bgBlack('Rejecting VPN Server ') + c.yellow.bgBlack(item.hostname));
                 l(c.red('Terminating ' + item.hostname + ' pid ' + c.black.bgWhite(vpnProcess.pid)));
                 return child.execSync('sudo kill ' + vpnProcess.pid);
-                //return _cb(null, item);
-            }
-
-            var ifc = item.tunnel;
+            }else
             try {
-                var o = child.execSync('ifconfig ' + ifc).toString().split(' ').join(' ');
+                var o = child.execSync('ifconfig ' + item.tunnel).toString().split(' ').join(' ');
                 _.each(o.split("\n"), function(lin) {
                     if (lin.includes("inet ")) {
+			    l('lin1:', lin);
                         lin = lin.split(' ').join(' ').split('inet ')[1].split(' ');
+			    l('lin2:', lin);
                         item.localAddr = lin[0];
                         item.remoteAddr = lin[2];
                         item.netmask = lin[4];
@@ -113,14 +110,12 @@ var executeList = function(list) {
                 try {
                     l(c.red('Terminating ' + item.hostname + ' pid ' + c.black.bgWhite(vpnProcess.pid)));
                     child.execSync('sudo kill ' + vpnProcess.pid);
-                    //return _cb(null, item);
                 } catch (e) {
                     l(c.red.bgBlack('Failed to Terminate VPN on ' + c.yellow.bgBlack(item.hostname)))
-                    //return _cb(null, item);
+                return _cb(null, item);
                 }
             } catch (e) {
                 l(c.red.bgBlack('Failed to establish VPN with ' + c.yellow.bgBlack(item.hostname)))
-                //return _cb(null, item);
             }
         }, config.vpnTimeLimit);
     }, function(e, done) {
