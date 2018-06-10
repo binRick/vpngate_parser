@@ -70,7 +70,7 @@ var executeList = function(list) {
                 lin = lin.split(" ").join(" ");
                 if (lin.includes('ifconfig') && lin.includes('netmask 255.255.255.255 up')) {
                     item.tunnel = lin.split("ifconfig")[1].split(' ').join(' ').split(' ')[1].split(' ')[0];
-                }elseif(lin.includes('ip addr add dev')){
+                }else if(lin.includes('ip addr add dev')){
 			item.tunnel = lin.split('ip ')[1].split(' ')[3];
 			l(item.tunnel, 'TUNNEL');
 		}
