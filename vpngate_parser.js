@@ -136,6 +136,8 @@ var executeList = function(list) {
                 return (item.localAddr != null && item.remoteAddr != null && item.netmask != null && item.tunnel != null);
             });
             l(c.black.bgWhite(acceptedVpns.length) + c.white.bgBlack(' / ') + c.black.bgWhite(done.length) + ' ' + c.green.bgBlack(' VPN Servers are reachable'));
+
+		l(acceptedVpns);
         });
 };
 
