@@ -4,4 +4,5 @@ module.exports = {
     vpnConcurrency: process.VPNCONCURRENCY || 15,
     vpnTimeLimit: process.VPNTIMELIMIT || 5000,
     openvpn: process.OPENVPN || '/usr/sbin/openvpn',
+    vpnConfigFileDirectory: process.VPNCONFIGFILEDIRECTORY || __dirname+'/vpnConfigFiles',
 };
