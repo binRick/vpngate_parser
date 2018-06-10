@@ -1,4 +1,9 @@
- curl -4v ifconfig.io
+ ip: 
+	curl -4 https://ifconfig.io/ip
+
+info:
+	curl -4v ifconfig.io/all.json
+
 
   ip route add 0.0.0.0/0 dev tun_russia table 1
   ip rule add from all fwmark 1 table 1
