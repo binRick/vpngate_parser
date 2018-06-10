@@ -1,4 +1,6 @@
 node_modules
 .vscode
 package-lock.json
-*.ovpn
+*.ovpntemp/
+config/*
+temp
