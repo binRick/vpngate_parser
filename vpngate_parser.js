@@ -93,7 +93,8 @@ var executeList = function(list) {
                     if (item.tunnel == null) {
                         l(c.red.bgBlack('Rejecting VPN Server ') + c.yellow.bgBlack(item.hostname));
                         l(c.red('* Terminating ' + item.hostname + ' pid ' + c.black.bgWhite(vpnProcess.pid)));
-                        child.execSync('sleep 1 && sudo kill -9 -$(ps -o pgid= '+vpnProcess.pid+' | grep -o \'[0-9]*\')');
+                        child.execSync('sleep 1 && sudo pkill -TERM -P '+vpnProcess.pid);
+			    //kill -9 -$(ps -o pgid= '+vpnProcess.pid+' | grep -o \'[0-9]*\')');
 			    //kill -9 ' + vpnProcess.pid);
 			    //kill -9 -$(ps -o pgid= $PID | grep -o '[0-9]*')
                     } else
@@ -122,7 +123,8 @@ var executeList = function(list) {
                             try {
                                 l(c.red('** Terminating ' + item.hostname + ' pid ' + c.black.bgWhite(vpnProcess.pid)));
                          //       child.execSync('sleep 1 && sudo kill -9 ' + vpnProcess.pid);
-                        child.execSync('sleep 1 && sudo kill -9 -$(ps -o pgid= '+vpnProcess.pid+' | grep -o \'[0-9]*\')');
+                        //child.execSync('sleep 1 && sudo kill -9 -$(ps -o pgid= '+vpnProcess.pid+' | grep -o \'[0-9]*\')');
+                        child.execSync('sleep 1 && sudo pkill -TERM -P '+vpnProcess.pid);
                             } catch (e) {
                                 l(c.red.bgBlack('Failed to Terminate VPN on ' + c.yellow.bgBlack(item.hostname)))
                                 return _cb(null, item);
