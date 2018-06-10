@@ -2,15 +2,11 @@
 
 var fs = require('fs'),
     ifconfig = require('wireless-tools/ifconfig'),
-    url = 'http://www.vpngate.net/api/iphone/',
-    cacheSeconds = 60 * 30,
-    vpnConcurrency = 15,
-    vpnTimeLimit = 5000,
+    config = require('./config'),
     templateFile = __dirname + '/configTemplate.twig',
     splitter = require('openvpn-config-splitter'),
-    openvpn = '/usr/sbin/openvpn',
-    sanitize = require('sanitize-filename')
-pj = require('prettyjson'),
+    sanitize = require('sanitize-filename'),
+    pj = require('prettyjson'),
     twig = require('twig'),
     md5 = require('md5'),
     c = require('chalk'),
@@ -54,12 +50,12 @@ var debugList = function(list) {
     console.log(`Server countries: ${countryList(list)}`);
 };
 var executeList = function(list) {
-    async.mapLimit(list, vpnConcurrency, function(item, _cb) {
+    async.mapLimit(list, config.vpnConcurrency, function(item, _cb) {
         l('Working on ' + c.yellow.bgBlack(item.hostname));
         fs.writeFileSync(item.file, item.config);
         item.stdout = '';
         item.stderr = '';
-        var vpnProcess = child.spawn('sudo', [openvpn, item.file]);
+        var vpnProcess = child.spawn('sudo', [config.openvpn, item.file]);
         vpnProcess.stdout.on('data', function(dat) {
             dat = dat.toString();
             item.stdout += dat;
@@ -89,7 +85,7 @@ var executeList = function(list) {
                 }
 
             }
-        }, vpnTimeLimit);
+        }, config.vpnTimeLimit);
     }, function(e, done) {
         if (e) throw e;
         l(c.green.bgBlack('Completed VPN List'));
@@ -131,18 +127,18 @@ var handleList = function(list) {
         executeList(newList);
     });
 };
-cache.get(md5(url), function(err, value) {
+cache.get(md5(config.url), function(err, value) {
     if (err) throw err;
     if (value == null) {
         var m = 'Fetching VPN List from internet',
             spinner = new ora(m).start();
-        fetch(url)
+        fetch(config.url)
             .then(res => res.text())
             .then(res => res.split(/\r\n|\n|\r/).slice(1, -2).join('\n'))
             .then(csv => neatCsv(csv))
             .then(function(data) {
                 spinner.succeed('Remote Resource Fetched');
-                cache.set(md5(url), data, cacheSeconds, function(err, value) {
+                cache.set(md5(config.url), data, config.cacheSeconds, function(err, value) {
                     if (err) throw err;
                     handleList(data);
                 });
