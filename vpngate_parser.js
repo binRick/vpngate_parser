@@ -93,7 +93,7 @@ var executeList = function(list) {
                     if (item.tunnel == null) {
                         l(c.red.bgBlack('Rejecting VPN Server ') + c.yellow.bgBlack(item.hostname));
                         l(c.red('* Terminating ' + item.hostname + ' pid ' + c.black.bgWhite(vpnProcess.pid)));
-                        child.execSync('sleep 1 && sudo pkill -TERM -P '+vpnProcess.pid);
+                        child.execSync('sleep 1 && sudo pkill -TERM -P '+vpnProcess.pid+' 2>/dev/null');
 			    //kill -9 -$(ps -o pgid= '+vpnProcess.pid+' | grep -o \'[0-9]*\')');
 			    //kill -9 ' + vpnProcess.pid);
 			    //kill -9 -$(ps -o pgid= $PID | grep -o '[0-9]*')
@@ -124,7 +124,8 @@ var executeList = function(list) {
                                 l(c.red('** Terminating ' + item.hostname + ' pid ' + c.black.bgWhite(vpnProcess.pid)));
                          //       child.execSync('sleep 1 && sudo kill -9 ' + vpnProcess.pid);
                         //child.execSync('sleep 1 && sudo kill -9 -$(ps -o pgid= '+vpnProcess.pid+' | grep -o \'[0-9]*\')');
-                        child.execSync('sleep 1 && sudo pkill -TERM -P '+vpnProcess.pid);
+                        //child.execSync('sleep 1 && sudo pkill -TERM -P '+vpnProcess.pid);
+                        child.execSync('sleep 1 && sudo pkill -TERM -P '+vpnProcess.pid+' 2>/dev/null');
                             } catch (e) {
                                 l(c.red.bgBlack('Failed to Terminate VPN on ' + c.yellow.bgBlack(item.hostname)))
                                 return _cb(null, item);
@@ -140,8 +141,24 @@ var executeList = function(list) {
             var acceptedVpns = done.filter(function(item) {
                 return (item.localAddr != null && item.remoteAddr != null && item.netmask != null && item.tunnel != null);
             });
-		l(acceptedVpns[0]);
+//		l(acceptedVpns[0]);
             l(c.black.bgWhite(acceptedVpns.length) + c.white.bgBlack(' / ') + c.black.bgWhite(done.length) + ' ' + c.green.bgBlack(' VPN Servers are reachable'));
+		_.each(acceptedVpns, function(vpn){
+			var lv = {
+				localAddr: vpn.localAddr,
+				remoteAddr: vpn.remoteAddr,
+				tunnel: vpn.tunnel,
+				code: vpn.code,
+				ip: vpn.ip,
+				port: vpn.port,
+				proto: vpn.proto,
+				hostname: vpn.hostname,
+				file: vpn.file,
+				CountryLong: vpn.CountryLong,
+				NumVpnSessions: vpn.NumVpnSessions,
+			};
+			l(pj.render(lv));
+		});
 
         });
 };
