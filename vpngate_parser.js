@@ -90,6 +90,7 @@ var executeList = function(list) {
                 return _cb(null, item);
             });
             var killer = setTimeout(function() {
+                        try {
                     if (item.tunnel == null) {
                         l(c.red.bgBlack('Rejecting VPN Server ') + c.yellow.bgBlack(item.hostname));
                         l(c.red('* Terminating ' + item.hostname + ' pid ' + c.black.bgWhite(vpnProcess.pid)));
@@ -98,7 +99,6 @@ var executeList = function(list) {
 			    //kill -9 ' + vpnProcess.pid);
 			    //kill -9 -$(ps -o pgid= $PID | grep -o '[0-9]*')
                     } else
-                        try {
                             var o = child.execSync('ifconfig ' + item.tunnel).toString().split(' ').join(' ');
                             _.each(o.split("\n"), function(lin) {
                                 if (lin.includes("inet ")) {
@@ -142,7 +142,6 @@ var executeList = function(list) {
                 return (item.localAddr != null && item.remoteAddr != null && item.netmask != null && item.tunnel != null);
             });
 //		l(acceptedVpns[0]);
-            l(c.black.bgWhite(acceptedVpns.length) + c.white.bgBlack(' / ') + c.black.bgWhite(done.length) + ' ' + c.green.bgBlack(' VPN Servers are reachable'));
 		_.each(acceptedVpns, function(vpn){
 			var lv = {
 				localAddr: vpn.localAddr,
@@ -159,7 +158,7 @@ var executeList = function(list) {
 			};
 			l(pj.render(lv)+"\n");
 		});
-
+            l(c.black.bgWhite(acceptedVpns.length) + c.white.bgBlack(' / ') + c.black.bgWhite(done.length) + ' ' + c.green.bgBlack(' VPN Servers are reachable'));
         });
 };
 
