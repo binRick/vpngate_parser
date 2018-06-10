@@ -23,8 +23,8 @@ var fs = require('fs'),
     _ = require('underscore'),
     neatCsv = require('neat-csv');
 
-if (!fs.existsSync(dir)){
-    fs.mkdirSync(dir);
+if (!fs.existsSync(config.vpnConfigFileDirectory))
+    fs.mkdirSync(config.vpnConfigFileDirectory);
 
 // CSV Columns
 // '#HostName','IP','Score','Ping','Speed','CountryLong','CountryShort','NumVpnSessions',
