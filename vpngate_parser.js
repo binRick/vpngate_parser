@@ -115,9 +115,9 @@ var handleList = function(list) {
             delete item.config;
             item.hostname = item['#HostName'];
             item.file = __dirname + '/config/' + item.hostname + '.ovpn';
-            twig.renderFile(templateFile, item, function(e, config) {
+            twig.renderFile(templateFile, item, function(e, configFile) {
                 if (e) throw e;
-                item.config = config;
+                item.config = configFile;
                 _cb(null, item);
             });
         });
@@ -127,6 +127,7 @@ var handleList = function(list) {
         executeList(newList);
     });
 };
+
 cache.get(md5(config.url), function(err, value) {
     if (err) throw err;
     if (value == null) {
