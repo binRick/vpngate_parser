@@ -17,15 +17,10 @@ async.mapSeries(jD, function(Tunnel, _cb) {
 
     job.on('complete', function(result) {
         l('Active Tunnel Checks Job #', job.id, 'Completed with data', result);
-
     }).on('failed attempt', function(errorMessage, doneAttempts) {
         l('Job #', job.id, 'failed');
-        _cb(errorMessage);
-
     }).on('failed', function(errorMessage) {
         l('Job', job.id, 'failed');
-        _cb(errorMessage);
-
     }).on('progress', function(progress, data) {
         l('\r  job #' + job.id + ' ' + progress + '% complete with data ', data);
 

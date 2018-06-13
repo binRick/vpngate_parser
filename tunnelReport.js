@@ -65,7 +65,7 @@ function checkTunnel(job, ctx, done) {
     vpnProcess.on('exit', function(code) {
         l('openvpn exited with code', code);
         if ('Ifconfig' in Tunnel)
-            done(null, Tunnel);
+            done(null, Tunnel.Ifconfig);
         else
             done({
                 vpnProcessStdout: vpnProcessOut,

@@ -9,8 +9,8 @@ var l = console.log,
     parallelLimit = 1,
     express = require('express'),
     kueUiExpress = require('kue-ui-express'),
-    testProcessMaxRuntime = 1000 * 15,
-    vpnProcessMaxRuntime = 1000 * 30,
+    testProcessMaxRuntime = 1000 * 45,
+    vpnProcessMaxRuntime = 1000 * 60,
     app = express();
 
 kue.createQueue();
@@ -56,8 +56,8 @@ function checkTunnel(job, ctx, done) {
     }, vpnProcessMaxRuntime);
     vpnProcess.on('exit', function(code) {
         l('openvpn exited with code', code);
-        if ('Ifconfig' in Tunnel)
-            done(null, Tunnel);
+        if ('SpeedReport' in Tunnel && Tunnel.SpeedReport.includes('time_total'))
+            done(null, Tunnel.TunnelSpeedReport);
         else
             done({
                 vpnProcessStdout: vpnProcessOut,
@@ -77,14 +77,13 @@ function checkTunnel(job, ctx, done) {
                 if (code == 0) {
                     l(testProcessOut);
                     try {
-                        Tunnel.Ifconfig = JSON.parse(testProcessOut);
-                        l(c.green('JSON parsed', _.keys(testProcessOut).length, 'keys!'));
+                        Tunnel.SpeedReport = testProcessOut;
                         setTimeout(function() {
                             try {
                                 if (vpnProcess.pid > 0)
                                     child.execSync('sudo pkill -TERM -P ' + vpnProcess.pid);
                             } catch (e) {}
-                        }, 5000);
+                        }, 1000);
 
                     } catch (e) {
                         l('Failed to decode JSON from test script:', testProcessOut);
@@ -93,7 +92,7 @@ function checkTunnel(job, ctx, done) {
                                 if (vpnProcess.pid > 0)
                                     child.execSync('sudo pkill -TERM -P ' + vpnProcess.pid);
                             } catch (e) {}
-                        }, 5000);
+                        }, 1000);
                     }
                 } else {
                     l(testProcessErr);
