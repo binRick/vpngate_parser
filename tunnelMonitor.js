@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 var l = console.log,
+_ = require('underscore'),
     kue = require('kue'),
     queue = kue.createQueue(),
     parallelLimit = 5,
@@ -29,14 +30,20 @@ process.once('SIGTERM', function(sig) {
     });
 });
 
-queue.process('Active Tunnels', parallelLimit, checkTunnel);
+queue.process('Active Tunnel', parallelLimit, checkTunnel);
 
 function checkTunnel(job, ctx, done) {
-    console.log(job.data);
+    l('Processing job #', job.id, ' with data of ', JSON.stringify(job.data).length, 'bytes...');
     //if (!('to' in job.data) || !(job.data.to.includes('@'))) {
     //    return done(new Error('invalid to address'));
     var result = {
-        asd: 123
+        IP: job.data.IP,
+        Tunnel: job.data.tunnel,
+        location: {
+            CountryLong: job.data.CountryLong,
+            CountryShort: job.data.CountryShort,
+        },
+        Config: job.data.file,
     };
     l('Tunnel Monitor', job.id, 'Done', result);
     done(null, result);

@@ -6,6 +6,6 @@ module.exports = {
     vpnTimeLimit: process.env.VPNTIMELIMIT || 30000,
     openvpn: process.env.OPENVPN || '/usr/sbin/openvpn',
     vpnConfigFileDirectory: process.env.VPNCONFIGFILEDIRECTORY || __dirname + '/vpnConfigFiles',
-    maxVPNs: process.env.MAXVPNS || 25,
+    maxVPNs: process.env.MAXVPNS || 999,
 
 };
