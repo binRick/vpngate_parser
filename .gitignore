@@ -5,3 +5,4 @@ package-lock.json
 vpnConfigFiles/*.ovpn
 temp
 .*.swp
+activeTunnels.json

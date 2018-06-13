@@ -39,7 +39,7 @@ var debugList = function(list) {
 var executeList = function(list) {
     async.mapLimit(list, config.vpnConcurrency, function(item, _cb) {
             item.CONCURRENY_ID = Math.floor(Math.random() * config.vpnConcurrency) + 3;
-            if (process.env.DEBUG=='1')
+            if (process.env.DEBUG == '1')
                 l('Working on ' + c.yellow.bgBlack(item.hostname) + ' using a OpenVPN Client config of ' + c.yellow.bgBlack(item.file.length) + ' bytes');
             fs.writeFileSync(item.file, item.config);
             item.stdout = '';
@@ -61,7 +61,7 @@ var executeList = function(list) {
                     }
                 });
                 if (item.stdout.includes('Initialization Sequence Completed')) {
-            if (process.env.DEBUG=='1')
+                    if (process.env.DEBUG == '1')
                         l(c.yellow.bgBlack(item.hostname) + ' : ' + c.green.bgBlack('Tunnel Ready on interface ') + c.yellow.bgBlack(item.tunnel));
                     /*
                                         l(c.green('** Testing ' + item.hostname + ' pid ' + c.black.bgWhite(vpnProcess.pid)));
@@ -99,16 +99,16 @@ var executeList = function(list) {
                 clearInterval(killer);
                 item.code = code;
                 delete item.config;
-            if (process.env.DEBUG=='1')
+                if (process.env.DEBUG == '1')
                     l(c.green("\t" + c.yellow.bgBlack(item.hostname) + " Completed with code " + c.black.bgWhite(item.code)));
                 return _cb(null, item);
             });
             var killer = setTimeout(function() {
                     try {
                         if (item.tunnel == null) {
-            if (process.env.DEBUG=='1')
+                            if (process.env.DEBUG == '1')
                                 l(c.red.bgBlack('Rejecting VPN Server ') + c.yellow.bgBlack(item.hostname));
-            if (process.env.DEBUG=='1')
+                            if (process.env.DEBUG == '1')
                                 l(c.red('* Terminating ' + item.hostname + ' pid ' + c.black.bgWhite(vpnProcess.pid)));
                             child.execSync('sleep 0 && sudo pkill -TERM -P ' + vpnProcess.pid + ' 2>/dev/null');
                         } else
@@ -135,16 +135,16 @@ var executeList = function(list) {
                         });
                         try {
 
-            if (process.env.DEBUG=='1')
+                            if (process.env.DEBUG == '1')
                                 l(c.red('** Terminating ' + item.hostname + ' pid ' + c.black.bgWhite(vpnProcess.pid)));
                             child.execSync('sleep 0 && sudo pkill -TERM -P ' + vpnProcess.pid + ' 2>/dev/null');
                         } catch (e) {
-            if (process.env.DEBUG=='1')
+                            if (process.env.DEBUG == '1')
                                 l(c.red.bgBlack('Failed to Terminate VPN on ' + c.yellow.bgBlack(item.hostname)))
                             return _cb(null, item);
                         }
                     } catch (e) {
-            if (process.env.DEBUG=='1')
+                        if (process.env.DEBUG == '1')
                             l(c.red.bgBlack('Failed to establish VPN with ' + c.yellow.bgBlack(item.hostname)))
                     }
                 },
@@ -169,10 +169,10 @@ var executeList = function(list) {
                     CountryLong: vpn.CountryLong,
                     NumVpnSessions: vpn.NumVpnSessions,
                 };
-            if (process.env.DEBUG=='1')
+                if (process.env.DEBUG == '1')
                     l(pj.render(lv) + "\n");
             });
-            if (process.env.DEBUG=='1')
+            if (process.env.DEBUG == '1')
                 l(c.black.bgWhite(acceptedVpns.length) + c.white.bgBlack(' / ') + c.black.bgWhite(done.length) + ' ' + c.green.bgBlack(' VPN Servers are reachable'));
             else
                 l(JSON.stringify(acceptedVpns));
@@ -211,7 +211,7 @@ var handleList = function(list) {
     }, function(e, newList) {
         if (e) throw e;
         newList = newList.slice(0, config.maxVPNs);
-            if (process.env.DEBUG=='1')
+        if (process.env.DEBUG == '1')
             debugList(newList);
         newList = newList.sort(function(a, b) {
             return 0.5 - Math.random()
