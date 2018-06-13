@@ -5,8 +5,8 @@ var l = console.log,
     queue = kue.createQueue(),
     jobData = {
         title: 'welcome email for tj',
-  //      to: 'badEmail1',
-      to: 'good@email.com12',
+        //      to: 'badEmail1',
+        to: 'good@email.com12',
         template: 'welcome-email'
     };
 

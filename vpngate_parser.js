@@ -2,6 +2,7 @@
 
 var fs = require('fs'),
     _ = require('underscore'),
+    utils = require('./utils'),
     ifconfig = require('wireless-tools/ifconfig'),
     config = require('./config'),
     templateFile = __dirname + '/configTemplate.twig',
@@ -27,30 +28,12 @@ var fs = require('fs'),
 if (!fs.existsSync(config.vpnConfigFileDirectory))
     fs.mkdirSync(config.vpnConfigFileDirectory);
 
-// CSV Columns
-// '#HostName','IP','Score','Ping','Speed','CountryLong','CountryShort','NumVpnSessions',
-//     'Uptime','TotalUsers','TotalTraffic','LogType','Operator','Message','OpenVPN_ConfigData_Base64'
-
-const countryList = (obj) => {
-    const countries = [];
-    for (const i in obj) {
-        countries.push(obj[i].CountryShort);
-    }
-
-    function unique(arr) {
-        const obj = {};
-        for (const i in countries) {
-            const str = arr[i];
-            obj[str] = true;
-        }
-        return Object.keys(obj);
-    }
-    return unique(countries);
-};
+process.on('SIGTERM', function() {
+    console.log('Goodbye!');
+});
 
 var debugList = function(list) {
-    //    l(pj.render(list[0]));
-    console.log('\nParsed ' + c.yellow.bgBlack(Object.keys(list).length) + ' VPN Servers in ' + c.yellow.bgBlack(countryList(list).length) + ' Different Countries: ' + c.yellow.bgBlack(countryList(list)) + '\n');
+    console.log('\nParsed ' + c.yellow.bgBlack(Object.keys(list).length) + ' VPN Servers in ' + c.yellow.bgBlack(utils.countryList(list).length) + ' Different Countries: ' + c.yellow.bgBlack(utils.countryList(list)) + '\n');
 };
 var executeList = function(list) {
     async.mapLimit(list, config.vpnConcurrency, function(item, _cb) {
@@ -76,6 +59,27 @@ var executeList = function(list) {
                 });
                 if (item.stdout.includes('Initialization Sequence Completed')) {
                     l(c.yellow.bgBlack(item.hostname) + ' : ' + c.green.bgBlack('Tunnel Ready on interface ') + c.yellow.bgBlack(item.tunnel));
+                    l(c.green('** Testing ' + item.hostname + ' pid ' + c.black.bgWhite(vpnProcess.pid)));
+                    var testProcess = child.spawn('node', [__dirname, '/vpngate_parser.js']);
+                    testProcessOut = '';
+                    testProcessErr = '';
+                    testProcess.on('exit', function(code) {
+                        if (code == 0) {
+                            l(c.red.bgBlack('Tunnel Test Completed!'));
+                            l(testProcessOut);
+                        } else {
+                            l(c.green.bgBlack('Tunnel Test Failed!'));
+                            l(testProcessErr);
+                        }
+                    });
+                    testProcess.stdout.on('data', function(s) {
+                        testProcessOut += s.toString();
+                        l(c.yellow.bgWhite('+'));
+                    });
+                    testProcess.stderr.on('data', function(s) {
+                        testProcessErr += s.toString();
+                        l(c.red.bgWhite('+'));
+                    });
                 }
             });
             vpnProcess.stderr.on('data', function(dat) {
@@ -90,49 +94,47 @@ var executeList = function(list) {
                 return _cb(null, item);
             });
             var killer = setTimeout(function() {
-                        try {
-                    if (item.tunnel == null) {
-                        l(c.red.bgBlack('Rejecting VPN Server ') + c.yellow.bgBlack(item.hostname));
-                        l(c.red('* Terminating ' + item.hostname + ' pid ' + c.black.bgWhite(vpnProcess.pid)));
-                        child.execSync('sleep 0 && sudo pkill -TERM -P '+vpnProcess.pid+' 2>/dev/null');
-			    //kill -9 -$(ps -o pgid= '+vpnProcess.pid+' | grep -o \'[0-9]*\')');
-			    //kill -9 ' + vpnProcess.pid);
-			    //kill -9 -$(ps -o pgid= $PID | grep -o '[0-9]*')
-                    } else
+                    try {
+                        if (item.tunnel == null) {
+                            l(c.red.bgBlack('Rejecting VPN Server ') + c.yellow.bgBlack(item.hostname));
+                            l(c.red('* Terminating ' + item.hostname + ' pid ' + c.black.bgWhite(vpnProcess.pid)));
+                            child.execSync('sleep 0 && sudo pkill -TERM -P ' + vpnProcess.pid + ' 2>/dev/null');
+                            //kill -9 -$(ps -o pgid= '+vpnProcess.pid+' | grep -o \'[0-9]*\')');
+                            //kill -9 ' + vpnProcess.pid);
+                            //kill -9 -$(ps -o pgid= $PID | grep -o '[0-9]*')
+                        } else
                             var o = child.execSync('ifconfig ' + item.tunnel).toString().split(' ').join(' ');
-                            _.each(o.split("\n"), function(lin) {
-                                if (lin.includes("inet ")) {
-                                    lin = lin.split(' ').join(' ').split('inet ')[1].split(' ');
-                                    if (lin[2] == 'netmask') {
-                                        //centos
-                                        item.localAddr = lin[0];
-                                        item.remoteAddr = lin[6];
-                                        item.netmask = lin[3];
-                                    } else if (lin[1] == '-->') {
-                                        //osx
-                                        item.localAddr = lin[0];
-                                        item.remoteAddr = lin[2];
-                                        item.netmask = lin[4];
-                                    }else{
-				    	l(c.red.bgBlack('Unknown ifconfig output!'));
-					    l(lin);
-					    process.exit(-1);
-				    }
+                        _.each(o.split("\n"), function(lin) {
+                            if (lin.includes("inet ")) {
+                                lin = lin.split(' ').join(' ').split('inet ')[1].split(' ');
+                                if (lin[2] == 'netmask') {
+                                    //centos
+                                    item.localAddr = lin[0];
+                                    item.remoteAddr = lin[6];
+                                    item.netmask = lin[3];
+                                } else if (lin[1] == '-->') {
+                                    //osx
+                                    item.localAddr = lin[0];
+                                    item.remoteAddr = lin[2];
+                                    item.netmask = lin[4];
+                                } else {
+                                    l(c.red.bgBlack('Unknown ifconfig output!'));
+                                    l(lin);
+                                    process.exit(-1);
                                 }
-                            });
-                            try {
-                                l(c.red('** Terminating ' + item.hostname + ' pid ' + c.black.bgWhite(vpnProcess.pid)));
-                         //       child.execSync('sleep 1 && sudo kill -9 ' + vpnProcess.pid);
-                        //child.execSync('sleep 1 && sudo kill -9 -$(ps -o pgid= '+vpnProcess.pid+' | grep -o \'[0-9]*\')');
-                        //child.execSync('sleep 1 && sudo pkill -TERM -P '+vpnProcess.pid);
-                        child.execSync('sleep 0 && sudo pkill -TERM -P '+vpnProcess.pid+' 2>/dev/null');
-                            } catch (e) {
-                                l(c.red.bgBlack('Failed to Terminate VPN on ' + c.yellow.bgBlack(item.hostname)))
-                                return _cb(null, item);
                             }
+                        });
+                        try {
+
+                            l(c.red('** Terminating ' + item.hostname + ' pid ' + c.black.bgWhite(vpnProcess.pid)));
+                            child.execSync('sleep 0 && sudo pkill -TERM -P ' + vpnProcess.pid + ' 2>/dev/null');
                         } catch (e) {
-                            l(c.red.bgBlack('Failed to establish VPN with ' + c.yellow.bgBlack(item.hostname)))
+                            l(c.red.bgBlack('Failed to Terminate VPN on ' + c.yellow.bgBlack(item.hostname)))
+                            return _cb(null, item);
                         }
+                    } catch (e) {
+                        l(c.red.bgBlack('Failed to establish VPN with ' + c.yellow.bgBlack(item.hostname)))
+                    }
                 },
                 config.vpnTimeLimit);
         },
@@ -141,23 +143,22 @@ var executeList = function(list) {
             var acceptedVpns = done.filter(function(item) {
                 return (item.localAddr != null && item.remoteAddr != null && item.netmask != null && item.tunnel != null);
             });
-//		l(acceptedVpns[0]);
-		_.each(acceptedVpns, function(vpn){
-			var lv = {
-				localAddr: vpn.localAddr,
-				remoteAddr: vpn.remoteAddr,
-				tunnel: vpn.tunnel,
-				code: vpn.code,
-				ip: vpn.ip,
-				port: vpn.port,
-				proto: vpn.proto,
-				hostname: vpn.hostname,
-				file: vpn.file,
-				CountryLong: vpn.CountryLong,
-				NumVpnSessions: vpn.NumVpnSessions,
-			};
-			l(pj.render(lv)+"\n");
-		});
+            _.each(acceptedVpns, function(vpn) {
+                var lv = {
+                    localAddr: vpn.localAddr,
+                    remoteAddr: vpn.remoteAddr,
+                    tunnel: vpn.tunnel,
+                    code: vpn.code,
+                    ip: vpn.ip,
+                    port: vpn.port,
+                    proto: vpn.proto,
+                    hostname: vpn.hostname,
+                    file: vpn.file,
+                    CountryLong: vpn.CountryLong,
+                    NumVpnSessions: vpn.NumVpnSessions,
+                };
+                l(pj.render(lv) + "\n");
+            });
             l(c.black.bgWhite(acceptedVpns.length) + c.white.bgBlack(' / ') + c.black.bgWhite(done.length) + ' ' + c.green.bgBlack(' VPN Servers are reachable'));
         });
 };
@@ -195,6 +196,9 @@ var handleList = function(list) {
         if (e) throw e;
         newList = newList.slice(0, config.maxVPNs);
         debugList(newList);
+        newList = newList.sort(function(a, b) {
+            return 0.5 - Math.random()
+        });
         executeList(newList);
     });
 };

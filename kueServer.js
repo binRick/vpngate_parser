@@ -4,7 +4,7 @@ var l = console.log,
     kue = require('kue'),
     queue = kue.createQueue(),
     parallelLimit = 5,
-express = require('express');
+    express = require('express');
 kueUiExpress = require('kue-ui-express');
 app = express();
 
@@ -12,8 +12,8 @@ kue.createQueue();
 
 kueUiExpress(app, '/kue/', '/kue-api/');
 
- app.use('/kue-api/', kue.app);
- app.listen(3000);
+app.use('/kue-api/', kue.app);
+app.listen(3000);
 
 app.set('title', 'vpngate kue');
 
