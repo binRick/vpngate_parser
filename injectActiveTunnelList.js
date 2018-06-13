@@ -8,12 +8,8 @@ var l = console.log,
     jD = JSON.parse(fs.readFileSync(process.argv[2]).toString()),
     async = require('async');
 
-
 async.mapSeries(jD, function(Tunnel, _cb) {
-//l(typeof Tunnel);
-//l(Tunnel);
-//process.exit();
-    var job = queue.create('Active Tunnel', Tunnel).priority('low').attempts(5).searchKeys([]).save(function(err){
+    var job = queue.create('Active Tunnel', Tunnel).priority('low').attempts(5).searchKeys(['IP', 'tunnel', 'CountryLong', 'CountryShort', 'file']).save(function(err) {
         if (err) throw err;
         l('Saved Active Tunnels #', job.id);
     });
@@ -34,7 +30,6 @@ async.mapSeries(jD, function(Tunnel, _cb) {
         l('\r  job #' + job.id + ' ' + progress + '% complete with data ', data);
 
     });
-
 }, function(errs, done) {
     l('Finished creating active tunnel jobs...');
 });

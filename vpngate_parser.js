@@ -2,6 +2,7 @@
 
 var fs = require('fs'),
     _ = require('underscore'),
+    path = require('path'),
     trim = require('trim'),
     utils = require('./utils'),
     ifconfig = require('wireless-tools/ifconfig'),
@@ -169,6 +170,9 @@ var executeList = function(list) {
                     CountryLong: vpn.CountryLong,
                     NumVpnSessions: vpn.NumVpnSessions,
                 };
+                //lv.tunnel = path.basename(lv.file, '.ovpn');
+                lv.tunnel = 'tun_' + lv.tunnel;
+                lv.tunnel = lv.tunnel.slice(0, 16);
                 if (process.env.DEBUG == '1')
                     l(pj.render(lv) + "\n");
             });
