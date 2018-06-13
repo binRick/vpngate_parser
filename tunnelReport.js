@@ -67,11 +67,7 @@ function checkTunnel(job, ctx, done) {
         if ('Ifconfig' in Tunnel)
             done(null, Tunnel.Ifconfig);
         else
-            done({
-                vpnProcessStdout: vpnProcessOut,
-                vpnProcessErr: vpnProcessErr
-            });
-        //, testProcessOut: testProcessOut, testProcessErr: testProcessErr});
+            done('openvpn exited with code '+code);
     });
     vpnProcess.stdout.on('data', function(s) {
         vpnProcessOut += s.toString();

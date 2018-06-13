@@ -57,13 +57,9 @@ function checkTunnel(job, ctx, done) {
     vpnProcess.on('exit', function(code) {
         l('openvpn exited with code', code);
         if ('SpeedReport' in Tunnel && Tunnel.SpeedReport.includes('time_total'))
-            done(null, Tunnel.TunnelSpeedReport);
+            done(null, Tunnel.SpeedReport);
         else
-            done({
-                vpnProcessStdout: vpnProcessOut,
-                vpnProcessErr: vpnProcessErr
-            });
-        //, testProcessOut: testProcessOut, testProcessErr: testProcessErr});
+            done({msg: 'openvpn exited with code '+code, code: code, err: vpnProcessErr, out: vpnProcessOut});
     });
     vpnProcess.stdout.on('data', function(s) {
         vpnProcessOut += s.toString();

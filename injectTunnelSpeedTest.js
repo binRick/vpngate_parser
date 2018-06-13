@@ -8,6 +8,8 @@ var l = console.log,
     jD = JSON.parse(fs.readFileSync(process.argv[2]).toString()),
     async = require('async');
 
+jD = jD.sort(function(a, b){return 0.5 - Math.random()});
+
 async.mapSeries(jD, function(Tunnel, _cb) {
     var job = queue.create('Tunnel Speed Report', Tunnel).priority('low').attempts(5).searchKeys(['IP', 'tunnel', 'CountryLong', 'CountryShort', 'file']).save(function(err) {
         if (err) throw err;
