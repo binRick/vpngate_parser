@@ -34,11 +34,10 @@ process.once('SIGTERM', function(sig) {
     });
 });
 
-queue.process('Active Tunnel', parallelLimit, checkTunnel);
+queue.process('Tunnel IP Report', parallelLimit, checkTunnel);
 
 function checkTunnel(job, ctx, done) {
     l('Processing job #', job.id, ' with data of ', JSON.stringify(job.data).length, 'bytes...');
-    l(_.keys(job.data));
     //if (!('to' in job.data) || !(job.data.to.includes('@'))) {
     //    return done(new Error('invalid to address'));
     var Tunnel = {
@@ -65,13 +64,20 @@ function checkTunnel(job, ctx, done) {
     }, vpnProcessMaxRuntime);
     vpnProcess.on('exit', function(code) {
         l('openvpn exited with code', code);
-        done(null, Tunnel);
+        if ('Ifconfig' in Tunnel)
+            done(null, Tunnel);
+        else
+            done({
+                vpnProcessStdout: vpnProcessOut,
+                vpnProcessErr: vpnProcessErr
+            });
+        //, testProcessOut: testProcessOut, testProcessErr: testProcessErr});
     });
     vpnProcess.stdout.on('data', function(s) {
         vpnProcessOut += s.toString();
         if (vpnProcessOut.includes('Initialization Sequence Completed')) {
             l('VPN Initialized. Testing Tunnel Connection');
-            var testProcess = child.spawn('sudo', ['./testTunnelSpeed.sh', Tunnel.name, '16']),
+            var testProcess = child.spawn('sudo', ['./ifconfigTunnel.sh', Tunnel.name, '16']),
                 testProcessOut = '',
                 testProcessErr = '';
             testProcess.on('exit', function(code) {

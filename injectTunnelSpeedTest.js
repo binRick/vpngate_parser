@@ -9,7 +9,7 @@ var l = console.log,
     async = require('async');
 
 async.mapSeries(jD, function(Tunnel, _cb) {
-    var job = queue.create('Tunnel IP Report', Tunnel).priority('low').attempts(5).searchKeys(['IP', 'tunnel', 'CountryLong', 'CountryShort', 'file']).save(function(err) {
+    var job = queue.create('Tunnel Speed Report', Tunnel).priority('low').attempts(5).searchKeys(['IP', 'tunnel', 'CountryLong', 'CountryShort', 'file']).save(function(err) {
         if (err) throw err;
         l('Saved Active Tunnels #', job.id);
         _cb(null, job.id);

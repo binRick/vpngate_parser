@@ -21,6 +21,4 @@ iptables -I OUTPUT -o $TUN -p tcp ! --dport 443 -j DROP
 iptables -t nat -A POSTROUTING -o $TUN -j MASQUERADE
 
 
-cat /sys/class/net/${TUN}/statistics/rx_bytes
-curl -#4Lo /dev/null -kw "\ntime_connect: %{time_connect}s\ntime_namelookup: %{time_namelookup}s\ntime_pretransfer: %{time_pretransfer}\ntime_starttransfer: %{time_starttransfer}s\ntime_redirect: %{time_redirect}s\ntime_total: %{time_total}s\n\n" $SPEED_TEST_URL
-cat /sys/class/net/${TUN}/statistics/rx_bytes
+curl -4 https://ifconfig.io:$TUN_PORT/all.json
