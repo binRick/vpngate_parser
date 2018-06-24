@@ -4,9 +4,9 @@ var l = console.log,
     kue = require('kue'),
     queue = kue.createQueue(),
     parallelLimit = 5,
-    express = require('express');
-kueUiExpress = require('kue-ui-express');
-app = express();
+    express = require('express'),
+    kueUiExpress = require('kue-ui-express'),
+    app = express();
 
 kue.createQueue();
 
@@ -30,9 +30,6 @@ process.once('SIGTERM', function(sig) {
 });
 
 queue.process('email', parallelLimit, function(job, ctx, done) {
-    //Promise.method(function() {
-    //    throw new Error('bad things happen');
-    //})().nodeify(done)
     email(job, done);
 });
 
