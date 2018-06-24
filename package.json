@@ -34,6 +34,7 @@
     "node-fetch": "^1.7.1",
     "openvpn-config-splitter": "^1.0.0",
     "ora": "^2.1.0",
+    "pretty-bytes": "^5.1.0",
     "prettyjson": "^1.2.1",
     "request": "^2.87.0",
     "sanitize-filename": "^1.6.1",
