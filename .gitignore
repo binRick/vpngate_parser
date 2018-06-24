@@ -6,3 +6,4 @@ vpnConfigFiles/*.ovpn
 temp
 .*.swp
 activeTunnels.json
+state*.json
