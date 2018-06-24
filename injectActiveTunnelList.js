@@ -12,7 +12,7 @@ ttlMs = 1000 * 60 * 10;
 jD = jD.sort(function(a, b){return 0.5 - Math.random()});
 
 async.mapSeries(jD, function(Tunnel, _cb) {
-    var job = queue.create('Tunnel IP Report', Tunnel).priority('low').attempts(1).searchKeys(['IP', 'tunnel', 'CountryLong', 'CountryShort', 'file']).ttl(ttlMs).save(function(err) {
+    var job = queue.create('Tunnel IP Report', Tunnel).priority('low').attempts(5).searchKeys(['IP', 'tunnel', 'CountryLong', 'CountryShort', 'file']).ttl(ttlMs).save(function(err) {
         if (err) throw err;
         l('Saved Active Tunnels #', job.id);
         _cb(null, job.id);
