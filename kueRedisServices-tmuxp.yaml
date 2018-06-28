@@ -15,3 +15,7 @@ windows:
     - shell_command:
         - 'sleep 3'
         - './tunnelSpeedReport.js'
+    - shell_command:
+        - 'sleep 3'
+        - 'cd apiServer'
+        - 'DEBUG=apiserver:* npm start'
