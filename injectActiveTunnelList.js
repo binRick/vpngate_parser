@@ -11,7 +11,7 @@ var l = console.log,
 jD = jD.sort(function(a, b){return 0.5 - Math.random()});
 
 async.mapSeries(jD, function(Tunnel, _cb) {
-    var job = queue.create('Tunnel IP Report', Tunnel).priority('low').attempts(5).searchKeys(['IP', 'tunnel', 'CountryLong', 'CountryShort', 'file']).save(function(err) {
+    var job = queue.create('Tunnel IP Report', Tunnel).priority('low').backoff( {delay: 60*1000, type:'exponential'} ).ttl(50000).attempts(5).searchKeys(['IP', 'tunnel', 'CountryLong', 'CountryShort', 'file']).save(function(err) {
         if (err) throw err;
         l('Saved Active Tunnels #', job.id);
         _cb(null, job.id);
