@@ -1,0 +1,17 @@
+session_name: vpngate_parser
+windows:
+- window_name: Services
+  layout: tiled
+  panes:
+    - shell_command:
+        - ./kueServer.js
+    - shell_command:
+        - 'echo "Stock Kue Web Panel: http://web1.vpntech.net:3000/kue-api/"'
+        - 'echo "Kue-UI Web Panel: http://web1.vpntech.net:3000/kue/"'
+        - 'echo "Flush Redis: ./flushRedis.sh"'
+    - shell_command:
+        - './flushRedis.sh'
+        - 'nodemon -e js ./injectTunnelSpeedTest.js vpns1.json'
+    - shell_command:
+        - 'sleep 3'
+        - './tunnelSpeedReport.js'
