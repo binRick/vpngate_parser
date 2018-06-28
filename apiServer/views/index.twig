@@ -3,8 +3,8 @@
 {% block body %}
   <h2>{{stats.complete.qty}} Active Tunnels</h2>
 
-  <table>
-    <tr>
+  <table id="vpnEndpoints" class="display" style="width:100%">
+    <thead><tr>
 	    <th>Country</th>
 	    <th>Speed</th>
 	    <th>IP</th>
@@ -12,7 +12,7 @@
 	    <th>Test Duration</th>
 	    <th>Name</th>
 	    <th>Interface</th>
-    </tr>
+    </tr></thead><tbody>
   {% for vpn in stats.complete.data %}
     <tr>
             <td>{{vpn.data.CountryLong}}</td>
@@ -24,8 +24,10 @@
             <td>{{vpn.data.tunnel}}</td>
     </tr>
   {% endfor %}
-  </table>
+  </tbody></table>
 
+
+<script src='/js/index.js'></script>
 
 
 

@@ -7,6 +7,9 @@ var urls = {
     completes: 'http://localhost:3000/kue-api/jobs/Tunnel%20Speed%20Report/complete/0..__QTY__/desc',
 };
 
+router.get('/js/index.js', function(req, res, next) {
+	res.sendFile(__dirname+'/js/index.js');
+});
 router.get('/', function(req, res, next) {
     request.get(urls.completeStats, function(e, dat) {
         if (e) throw e;
