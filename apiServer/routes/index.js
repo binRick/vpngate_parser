@@ -1,9 +1,30 @@
-var express = require('express');
-var router = express.Router();
+var express = require('express'),
+    request = require('request'),
+    router = express.Router(),
+    l = console.log;
+var urls = {
+    completeStats: 'http://localhost:3000/kue-api/jobs/Tunnel%20Speed%20Report/complete/stats',
+    completes: 'http://localhost:3000/kue-api/jobs/Tunnel%20Speed%20Report/complete/0..__QTY__/desc',
+};
 
-/* GET home page. */
 router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Express' });
+    request.get(urls.completeStats, function(e, dat) {
+        if (e) throw e;
+        var stats = {
+            complete: {
+                qty: JSON.parse(dat.body).count,
+            },
+        };
+        request.get(urls.completes.replace('__QTY__', stats.complete.qty), function(e, dat) {
+            if (e) throw e;
+            stats.complete.data = JSON.parse(dat.body);
+            l(stats.complete.data[0]);
+            res.render('index', {
+                stats: stats
+            });
+
+        });
+    });
 });
 
 module.exports = router;

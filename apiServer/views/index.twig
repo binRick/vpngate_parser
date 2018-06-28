@@ -1,6 +1,33 @@
 {% extends 'layout.twig' %}
 
 {% block body %}
-  <h1>{{title}}</h1>
-  <p>Welcome to {{title}}</p>
+  <h2>{{stats.complete.qty}} Active Tunnels</h2>
+
+  <table>
+    <tr>
+	    <th>Country</th>
+	    <th>Speed</th>
+	    <th>IP</th>
+	    <th>Protocol</th>
+	    <th>Test Duration</th>
+	    <th>Name</th>
+	    <th>Interface</th>
+    </tr>
+  {% for vpn in stats.complete.data %}
+    <tr>
+            <td>{{vpn.data.CountryLong}}</td>
+            <td>{{vpn.result.parsed.perSecondRate}}</td>
+            <td>{{vpn.data.IP}}</td>
+            <td>{{vpn.data.proto}}</td>
+            <td>{{vpn.duration}}</td>
+            <td>{{vpn.data.hostname}}</td>
+            <td>{{vpn.data.tunnel}}</td>
+    </tr>
+  {% endfor %}
+  </table>
+
+
+
+
+
 {% endblock %}

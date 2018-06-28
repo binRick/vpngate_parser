@@ -10,8 +10,8 @@ windows:
         - 'echo "Kue-UI Web Panel: http://web1.vpntech.net:3000/kue/"'
         - 'echo "Flush Redis: ./flushRedis.sh"'
     - shell_command:
-        - './flushRedis.sh'
-        - 'nodemon -e js ./injectTunnelSpeedTest.js vpns1.json'
+        - './vpngate_parser.js > vpns1.json'
+        - './injectTunnelSpeedTest.js vpns1.json'
     - shell_command:
         - 'sleep 3'
         - './tunnelSpeedReport.js'
