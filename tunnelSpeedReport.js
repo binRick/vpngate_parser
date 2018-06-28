@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 var l = console.log,
+    prettyBytes = require('pretty-bytes'),
     _ = require('underscore'),
     c = require('chalk'),
     kue = require('kue'),
@@ -30,8 +31,6 @@ queue.process('Tunnel Speed Report', parallelLimit, checkTunnel);
 
 function checkTunnel(job, ctx, done) {
     l('Processing Speed Report, job #', job.id, ' with data of ', JSON.stringify(job.data).length, 'bytes...');
-    //if (!('to' in job.data) || !(job.data.to.includes('@'))) {
-    //    return done(new Error('invalid to address'));
     var Tunnel = {
         IP: job.data.IP,
         name: job.data.tunnel,
@@ -56,10 +55,36 @@ function checkTunnel(job, ctx, done) {
     }, vpnProcessMaxRuntime);
     vpnProcess.on('exit', function(code) {
         l('openvpn exited with code', code);
-        if ('SpeedReport' in Tunnel && Tunnel.SpeedReport.includes('time_total'))
-            done(null, Tunnel.SpeedReport);
-        else
-            done({msg: 'openvpn exited with code '+code, code: code, err: vpnProcessErr, out: vpnProcessOut});
+        if ('SpeedReport' in Tunnel && Tunnel.SpeedReport.includes('time_total')) {
+
+            var SpeedReport = {
+                raw: Tunnel.SpeedReport,
+                parsed: {},
+                srLines: Tunnel.SpeedReport.split("\n").join("\n").split("\n").filter(function(l) {
+                    return l;
+                }),
+            };
+
+            _.each(SpeedReport.srLines, function(l) {
+                if (l.includes(': ')) {
+                    var lP = l.split(': ');
+                    SpeedReport.parsed[lP[0]] = lP[1].replace(/s$/, '');
+                }
+            });
+
+            SpeedReport.parsed.bytesReceived = parseInt(SpeedReport.srLines[SpeedReport.srLines.length - 1]) - parseInt(SpeedReport.srLines[0]);
+
+            SpeedReport.parsed.perSecondRate = prettyBytes(parseInt(SpeedReport.parsed.bytesReceived / SpeedReport.parsed.time_total)) + '/sec';
+
+
+            done(null, SpeedReport);
+        } else
+            done({
+                msg: 'openvpn exited with code ' + code,
+                code: code,
+                err: vpnProcessErr,
+                out: vpnProcessOut
+            });
     });
     vpnProcess.stdout.on('data', function(s) {
         vpnProcessOut += s.toString();

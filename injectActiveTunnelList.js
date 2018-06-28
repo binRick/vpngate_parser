@@ -6,7 +6,8 @@ var l = console.log,
     queue = kue.createQueue(),
     fs = require('fs'),
     jD = JSON.parse(fs.readFileSync(process.argv[2]).toString()),
-    async = require('async');
+    async = require('async'),
+ttlMs = 1000 * 60 * 10;
 
 jD = jD.sort(function(a, b){return 0.5 - Math.random()});
 
