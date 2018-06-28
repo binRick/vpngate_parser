@@ -7,3 +7,4 @@ temp
 .*.swp
 activeTunnels.json
 state*.json
+vpns*.json
