@@ -12,6 +12,8 @@
 	    <th>Test Duration</th>
 	    <th>Name</th>
 	    <th>Interface</th>
+	    <th>Latitude</th>
+	    <th>Longitude</th>
     </tr></thead><tbody>
   {% for vpn in stats.complete.data %}
     <tr>
@@ -22,6 +24,8 @@
             <td>{{vpn.duration}}</td>
             <td>{{vpn.data.hostname}}</td>
             <td>{{vpn.data.tunnel}}</td>
+            <td>{{vpn.data.latittude}}</td>
+            <td>{{vpn.data.longitude}}</td>
     </tr>
   {% endfor %}
   </tbody></table>

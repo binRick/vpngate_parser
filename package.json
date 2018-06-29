@@ -25,6 +25,7 @@
     "ifconfig": "0.0.1",
     "ifconfig-linux": "^0.1.0",
     "ifconfig-parser": "0.0.1",
+    "ip-to-location": "^1.0.1",
     "kue": "^0.11.6",
     "kue-scheduler": "^0.7.4",
     "kue-ui": "^0.1.0",
