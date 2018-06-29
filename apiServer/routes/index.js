@@ -29,6 +29,7 @@ router.get('/', function(req, res, next) {
                 ip2location.fetch(o.data.IP, function(err, res) {
                     if (err) throw err;
                     o.ipInfo = res;
+                    o.ipInfo.city = o.ipInfo.city || 'Unknown';
                     _cb(null, o);
                 });
             }, function(er, data) {

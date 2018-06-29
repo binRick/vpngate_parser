@@ -7,6 +7,8 @@
   <table id="vpnEndpoints" class="display" style="width:100%">
     <thead><tr>
 	    <th>Country</th>
+	    <th></th>
+	    <th>City</th>
 	    <th>Speed</th>
 	    <th>IP</th>
 	    <th>Protocol</th>
@@ -19,6 +21,8 @@
   {% for vpn in stats.complete.data %}
     <tr>
             <td>{{vpn.data.CountryLong}}</td>
+	    <td><span class="flag-icon flag-icon-{{vpn.data.CountryShort|lower}}"></span></td>
+	    <td>{{vpn.ipInfo.city}}</td>
             <td>{{vpn.result.parsed.perSecondRate}}</td>
             <td>{{vpn.data.IP}}</td>
             <td>{{vpn.data.proto}}</td>
