@@ -18,4 +18,5 @@ windows:
     - shell_command:
         - 'sleep 3'
         - 'cd apiServer'
+        - 'npm i '
         - 'DEBUG=apiserver:* npm start'
