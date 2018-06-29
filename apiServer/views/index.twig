@@ -7,10 +7,12 @@
 	publicIpInfo = JSON.parse('{{publicIpInfo}}'),
 	clientIpInfo = JSON.parse('{{clientIpInfo}}');
   </script>
-  <h2>{{stats.complete.qty}} Active Tunnels</h2>
+  <div id="pageTitle">{{stats.complete.qty}} Active Tunnels</div>
+  <div id="layout" style="width: 100%; height: 1060px;"></div>
 
-
-  <table id="vpnEndpoints" class="display" style="width:100%">
+  <div id="vpnTableWrapper">
+   <div id="toolbar" style="padding: 4px; border: 1px solid #dfdfdf; border-radius: 3px"></div>
+   <table id="vpnEndpoints" class="display" style="width:100%">
     <thead><tr>
 	    <th>Country</th>
 	    <th></th>
@@ -19,12 +21,8 @@
 	    <th>IP</th>
 	    <th>Protocol</th>
 	    <th>Test Duration</th>
-	    <th>Name</th>
-	    <th>Interface</th>
-	    <th>Latitude</th>
-	    <th>Longitude</th>
     </tr></thead><tbody>
-  {% for vpn in stats.complete.data %}
+   {% for vpn in stats.complete.data %}
     <tr>
             <td>{{vpn.data.CountryLong}}</td>
 	    <td><span class="flag-icon flag-icon-{{vpn.data.CountryShort|lower}}"></span></td>
@@ -33,15 +31,14 @@
             <td>{{vpn.data.IP}}</td>
             <td>{{vpn.data.proto}}</td>
             <td>{{vpn.duration}}</td>
-            <td>{{vpn.data.hostname}}</td>
-            <td>{{vpn.data.tunnel}}</td>
-            <td>{{vpn.ipInfo.latitude}}</td>
-            <td>{{vpn.ipInfo.longitude}}</td>
     </tr>
-  {% endfor %}
-  </tbody></table>
-  <div id="vpn-map" style="position: relative; height: 550px; width: 90%;"></div>
+   {% endfor %}
+   </tbody></table>
+  </div>
 
+  <div id="vpnMapWrapper">
+   <div id="vpn-map" style="position: relative; height: 360px; width: 98%;"></div>
+  </div>
 
 
 <script src='/js/index.js'></script>

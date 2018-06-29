@@ -32,14 +32,25 @@ var getStats = function(cb) {
                 });
             }, function(er, data) {
                 stats.complete.data = data;
-
                 cb(stats);
-
             });
         });
     });
 };
 
+router.get('/api/vpnCountries', function(req, res, next) {
+    getStats(function(stats) {
+        var countries = _.uniq(stats.complete.data.map(function(v) {
+		return {
+			country_name: v.ipInfo.country_name,		
+			country_code: v.ipInfo.country_code,		
+		};
+        }), false, function(n){
+		return n.country_code;
+	});
+        return res.json(countries);
+    });
+});
 router.get('/api/vpnStats', function(req, res, next) {
     getStats(function(stats) {
         return res.json(stats);
@@ -71,17 +82,17 @@ router.get('/', function(req, res, next) {
                 publicIp.v4().then(function(publicIp) {
                     ip2location.fetch(publicIp, function(err, publicIpInfo) {
                         if (err) throw err;
-                            var clientIp = String(req.headers['x-forwarded-for'] || req.connection.remoteAddress).replace('::ffff:','');
-                    ip2location.fetch(clientIp, function(err, clientIpInfo) {
-                        if (err) throw err;
-                        res.render('index', {
-                            stats: stats,
-                            publicIpInfo: JSON.stringify(publicIpInfo),
-                            publicIp: publicIp,
-                            clientIp: clientIp,
-                            clientIpInfo: JSON.stringify(clientIpInfo),
+                        var clientIp = String(req.headers['x-forwarded-for'] || req.connection.remoteAddress).replace('::ffff:', '');
+                        ip2location.fetch(clientIp, function(err, clientIpInfo) {
+                            if (err) throw err;
+                            res.render('index', {
+                                stats: stats,
+                                publicIpInfo: JSON.stringify(publicIpInfo),
+                                publicIp: publicIp,
+                                clientIp: clientIp,
+                                clientIpInfo: JSON.stringify(clientIpInfo),
+                            });
                         });
-                    });
                     });
                 });
             });
