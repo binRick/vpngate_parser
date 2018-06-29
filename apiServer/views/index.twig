@@ -3,6 +3,7 @@
 {% block body %}
   <h2>{{stats.complete.qty}} Active Tunnels</h2>
 
+
   <table id="vpnEndpoints" class="display" style="width:100%">
     <thead><tr>
 	    <th>Country</th>
@@ -29,6 +30,8 @@
     </tr>
   {% endfor %}
   </tbody></table>
+  <div id="vpn-map" style="position: relative; height: 550px; width: 90%;"></div>
+
 
 
 <script src='/js/index.js'></script>
