@@ -5,7 +5,8 @@ var express = require('express'),
     _ = require('underscore'),
     l = console.log,
     ip2location = require('ip-to-location'),
-    publicIp = require('public-ip');
+    publicIp = require('public-ip'),
+countryInfos = require('./countryInfos.json');
 
 var urls = {
     completeStats: 'http://localhost:3000/kue-api/jobs/Tunnel%20Speed%20Report/complete/stats',
@@ -38,16 +39,19 @@ var getStats = function(cb) {
     });
 };
 
+router.get('/api/vpnCountryInfos', function(req, res, next) {
+	return res.json(countryInfos.countries.country);
+});
 router.get('/api/vpnCountries', function(req, res, next) {
     getStats(function(stats) {
         var countries = _.uniq(stats.complete.data.map(function(v) {
-		return {
-			country_name: v.ipInfo.country_name,		
-			country_code: v.ipInfo.country_code,		
-		};
-        }), false, function(n){
-		return n.country_code;
-	});
+            return {
+                country_name: v.ipInfo.country_name,
+                country_code: v.ipInfo.country_code,
+            };
+        }), false, function(n) {
+            return n.country_code;
+        });
         return res.json(countries);
     });
 });

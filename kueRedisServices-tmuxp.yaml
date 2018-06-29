@@ -19,4 +19,4 @@ windows:
         - 'sleep 3'
         - 'cd apiServer'
         - 'npm i '
-        - 'DEBUG=apiserver:* npm start'
+        - 'DEBUG=apiserver:* ./bin/www'
