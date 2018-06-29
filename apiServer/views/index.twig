@@ -1,6 +1,12 @@
 {% extends 'layout.twig' %}
 
 {% block body %}
+  <script>
+	var publicIp = '{{publicIp}}'
+	clientIp = '{{clientIp}}',
+	publicIpInfo = JSON.parse('{{publicIpInfo}}'),
+	clientIpInfo = JSON.parse('{{clientIpInfo}}');
+  </script>
   <h2>{{stats.complete.qty}} Active Tunnels</h2>
 
 

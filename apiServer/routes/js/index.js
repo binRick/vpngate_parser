@@ -1,73 +1,104 @@
 var l = console.log;
 
 $(document).ready(function() {
-    l('ready to go');
-    $('#vpnEndpoints').dataTable();
+            l('ready to go');
+            $('#vpnEndpoints').dataTable();
 
 
-    var map = new Datamap({
-        element: document.getElementById('vpn-map'),
-        fills: {
-            HIGH: '#afafaf',
-            LOW: '#123456',
-            MEDIUM: 'blue',
-            UNKNOWN: 'rgb(0,0,0)',
-            defaultFill: 'red'
-        },
-        data: {},
-    });
-    map.bubbles([{
-            name: 'Hot',
-            latitude: 21.32,
-            longitude: 5.32,
-            radius: 10,
-            fillKey: 'HIGH'
-        },
-        {
-            name: 'Chilly',
-            latitude: -25.32,
-            longitude: 120.32,
-            radius: 18,
-            fillKey: 'LOW'
-        },
-        {
-            name: 'Hot again',
-            latitude: 21.32,
-            longitude: -84.32,
-            radius: 8,
-            fillKey: 'HIGH'
-        },
-
-    ], {
-        popupTemplate: function(geo, data) {
-            return "<div class='hoverinfo'>It is " + data.name + "</div>";
-        }
-    });
-
-    map.arc([{
-            origin: {
-                latitude: 40.639722,
-                longitude: 73.778889
-            },
-            destination: {
-                latitude: 37.618889,
-                longitude: -122.375
-            }
-        },
-        {
-            origin: {
-                latitude: 30.194444,
-                longitude: -97.67
-            },
-            destination: {
-                latitude: 25.793333,
-                longitude: -0.290556
-            }
-        }
-    ], {
-        strokeWidth: 2
-    });
+            $.get('/api/vpnStats', function(b) {
+                l(b.complete.data[0]);
 
 
+                var map = new Datamap({
+                    element: document.getElementById('vpn-map'),
+                    fills: {
+                        HIGH: '#afafaf',
+                        LOW: '#123456',
+                        MEDIUM: 'blue',
+                        UNKNOWN: 'rgb(0,0,0)',
+                        defaultFill: 'red'
+                    },
+                    data: {},
+                });
+                map.addPlugin('markers', Datamap.customMarkers);
 
-});
+                var options = {
+                    fillOpacity: 1,
+                    popupOnHover: true,
+                    icon: {
+                        url: '/images/greenVpn.png',
+                        width: 30,
+                        height: 30
+                    }
+                };
+
+                var mapMarkers = b.complete.data.map(function(v) {
+
+                    var vpn = {
+                        name: v.ipInfo.ip,
+                        radius: 10,
+                        latitude: v.ipInfo.latitude,
+                        longitude: v.ipInfo.longitude,
+                    };
+                    return vpn;
+                });
+
+                var mapArcs = b.complete.data.map(function(v) {
+                    var vpnArc = {
+                        options: {
+                            strokeWidth: 2,
+                            strokeColor: 'black'
+                        },
+                        origin: {
+                            latitude: publicIpInfo.latitude,
+                            longitude: publicIpInfo.longitude,
+                        },
+                        destination: {
+                            latitude: v.ipInfo.latitude,
+                            longitude: v.ipInfo.longitude,
+                        },
+			};
+                        return vpnArc;
+                    });
+
+                    l(mapMarkers[0]);
+                    map.markers(mapMarkers, options);
+                    //l(publicIpInfo);
+
+                    var options = {
+                        fillOpacity: 1,
+                        popupOnHover: true,
+                        icon: {
+                            url: '/images/server-icon.png',
+                            width: 15,
+                            height: 15
+                        }
+                    };
+                    map.markers([{
+                        name: 'VPN Endpoint',
+                        radius: 60,
+                        latitude: publicIpInfo.latitude,
+                        longitude: publicIpInfo.longitude,
+                    }], options);
+
+                    var options = {
+                        fillOpacity: 1,
+                        popupOnHover: true,
+                        icon: {
+                            url: '/images/home-icon.png',
+                            width: 15,
+                            height: 15
+                        }
+                    };
+                    map.markers([{
+                        name: 'Your Computer',
+                        radius: 60,
+                        latitude: clientIpInfo.latitude,
+                        longitude: clientIpInfo.longitude,
+                    }], options);
+
+                    map.arc(mapArcs, {
+                        strokeWidth: 2
+                    });
+                });
+            });
